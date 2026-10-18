@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InfraAudit India - Civic Procurement & Ground Truth Platform</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Top Navigation Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center text-white font-bold text-xl shadow-md">
+            IA
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="font-bold text-slate-900 text-lg tracking-tight">InfraAudit India</h1>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Public Beta</span>
+            </div>
+            <p class="text-xs text-slate-500">National Road & Bridge Procurement Transparency Platform</p>
+          </div>
+        </div>
+
+        <!-- Governance Badge -->
+        <div class="hidden md:flex items-center space-x-4">
+          <div class="text-right">
+            <span class="text-xs text-slate-400 block font-medium">Compliance Mode</span>
+            <span class="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+              Verified Evidence & Procurement Facts Only
+            </span>
+          </div>
+          <div class="h-8 w-px bg-slate-200"></div>
+          <div class="flex items-center space-x-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
+            <span class="text-xs font-medium text-orange-800">Observation Gate: 5-Day Filter Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex space-x-6 overflow-x-auto text-sm border-t border-slate-100" id="main-nav">
+        <button id="nav-tenders" class="py-3 px-1 text-slate-600 hover:text-slate-900 transition-colors tab-active whitespace-nowrap">
+          🏛️ Public Tenders & Bids
+        </button>
+        <button id="nav-contractors" class="py-3 px-1 text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap">
+          🏗️ Contractor Track Records
+        </button>
+        <button id="nav-evidence" class="py-3 px-1 text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap">
+          📸 Citizen Ground-Truth Evidence
+        </button>
+        <button id="nav-reviews" class="py-3 px-1 text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap">
+          ⚖️ AI-Moderated Civic Reviews
+        </button>
+        <button id="nav-analytics" class="py-3 px-1 text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap">
+          📊 Prediction vs. Reality Audit
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+    <!-- Legal & Operational Framework Banner -->
+    <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-4 text-white mb-6 shadow-sm border border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+      <div class="flex items-start space-x-3">
+        <div class="p-2 bg-slate-800 rounded-lg text-amber-400 text-lg border border-slate-700">⚖️</div>
+        <div>
+          <h2 class="text-sm font-semibold text-slate-100">Objective Oversight & Anti-Defamation Guardrails</h2>
+          <p class="text-xs text-slate-300 mt-0.5">
+            This platform does not declare "tender winners" or vote on procurement. It publishes verified public tender bids (CPPP/NHAI/MoRTH/PWD), validates field photos via GPS geo-fencing, and filters public submissions with AI reasoning moderation.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 shrink-0">
+        <span class="text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 font-mono">
+          4-Tier Review Weights: 1x / 5x / 8x / 10x
+        </span>
+      </div>
+    </div>
+
+    <!-- VIEW 1: TENDERS & BIDS EXPLORER -->
+    <section id="view-tenders" class="space-y-6">
+      <!-- Filter Bar -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-xs font-semibold text-slate-500 uppercase">Filter Agency:</label>
+          <select id="filter-agency" class="text-sm border border-slate-300 rounded-lg px-3 py-1.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500">
+            <option value="ALL">All Authorities (NHAI, MoRTH, PWD)</option>
+            <option value="NHAI">National Highways Authority of India (NHAI)</option>
+            <option value="MoRTH">Ministry of Road Transport & Highways (MoRTH)</option>
+            <option value="WB PWD">West Bengal PWD</option>
+          </select>
+
+          <label class="text-xs font-semibold text-slate-500 uppercase ml-2">Status:</label>
+          <select id="filter-status" class="text-sm border border-slate-300 rounded-lg px-3 py-1.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500">
+            <option value="ALL">All Statuses</option>
+            <option value="AWARDED">Awarded</option>
+            <option value="FINANCIAL_BID_OPENED">Financial Bid Opened</option>
+            <option value="PUBLISHED_BIDDING">Active Bidding</option>
+          </select>
+        </div>
+
+        <div class="text-xs text-slate-500">
+          Showing <span id="tender-count" class="font-bold text-slate-800">3</span> monitored infrastructure projects
+        </div>
+      </div>
+
+      <!-- Tender Cards Grid -->
+      <div id="tender-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- VIEW 2: CONTRACTOR TRACK RECORDS -->
+    <section id="view-contractors" class="space-y-6 hidden">
+      <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Contractor Transparency Directory</h2>
+            <p class="text-xs text-slate-500">Historical delay frequencies, cost escalation percentages, and official blacklisting records.</p>
+          </div>
+          <div class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium">
+            4 Registered Infrastructure Builders
+          </div>
+        </div>
+
+        <div id="contractor-table-container" class="mt-4 overflow-x-auto">
+          <table class="w-full text-left text-sm border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase border-b border-slate-200">
+                <th class="py-3 px-4">Contractor Name</th>
+                <th class="py-3 px-4">Established</th>
+                <th class="py-3 px-4">Completed Projects</th>
+                <th class="py-3 px-4">Historical Delay Rate</th>
+                <th class="py-3 px-4">Avg Delay</th>
+                <th class="py-3 px-4">Cost Overrun</th>
+                <th class="py-3 px-4">Quality Rating</th>
+                <th class="py-3 px-4">Regulatory Status</th>
+              </tr>
+            </thead>
+            <tbody id="contractors-tbody" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: CITIZEN GROUND EVIDENCE -->
+    <section id="view-evidence" class="space-y-6 hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Evidence Submission Card -->
+        <div class="lg:col-span-1 bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h2 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+              <span>📍</span> <span>Submit Geotagged Field Evidence</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">Automatic verification via Haversine corridor distance (< 250m) & timestamp freshness (< 72h).</p>
+          </div>
+
+          <form id="evidence-form" class="space-y-3">
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Target Infrastructure Project</label>
+              <select id="evidence-tender-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50 focus:ring-2 focus:ring-orange-500">
+                <option value="TND-2026-NHAI-091">NHAI NH-34 4-Laning (Barasat - Krishnanagar)</option>
+                <option value="TND-2026-PWD-404">WB PWD EM Bypass Elevated Corridor</option>
+                <option value="TND-2026-MORTH-811">MoRTH High-Level Teesta Bridge</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Submitter Verification Tier</label>
+              <select id="evidence-tier-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50">
+                <option value="CITIZEN">Tier 1: Local Citizen (Weight = 1.0x)</option>
+                <option value="CIVIL_ENGINEER">Tier 2: Civil Engineer (Weight = 5.0x)</option>
+                <option value="ROAD_QUALITY_INSPECTOR">Tier 3: Quality Inspector (Weight = 8.0x)</option>
+                <option value="STRUCTURAL_ENGINEER">Tier 4: Structural Engineer (Weight = 10.0x)</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-xs font-medium text-slate-700 block mb-1">Defect Category</label>
+                <select id="evidence-type-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50">
+                  <option value="POTHOLE_CLUSTER">Pothole Cluster</option>
+                  <option value="SURFACE_CRACKING">Surface Cracking</option>
+                  <option value="WATERLOGGING_DRAINAGE">Drainage Fault / Waterlogging</option>
+                  <option value="STRUCTURAL_DEFORMATION">Structural Girder Deformation</option>
+                  <option value="WORK_ABANDONED_STALLED">Work Stalled / Abandoned</option>
+                  <option value="COMPLETED_SMOOTH_STRETCH">Pristine Smooth Surface</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-medium text-slate-700 block mb-1">Severity (1 to 5)</label>
+                <select id="evidence-severity-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50">
+                  <option value="1">1 - Minor cosmetic defect</option>
+                  <option value="2">2 - Light wear</option>
+                  <option value="3" selected>3 - Moderate roughness</option>
+                  <option value="4">4 - Severe vehicle hazard</option>
+                  <option value="5">5 - Critical structural risk</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- GPS Coordinates Input -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-medium text-slate-700">GPS Coordinates (Lat, Long)</label>
+                <button type="button" id="btn-fill-valid-gps" class="text-[11px] text-orange-600 hover:text-orange-700 font-semibold underline">
+                  Auto-Fill Valid NH-34 GPS
+                </button>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="number" step="0.0001" id="evidence-lat" placeholder="Latitude (e.g. 22.7420)" value="22.7420" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                <input type="number" step="0.0001" id="evidence-lon" placeholder="Longitude (e.g. 88.4845)" value="88.4845" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+              </div>
+              <div class="flex items-center justify-end mt-1">
+                <button type="button" id="btn-fill-invalid-gps" class="text-[11px] text-slate-400 hover:text-red-600 underline">
+                  Simulate Out-of-Bounds GPS (+15km)
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Observable Description</label>
+              <textarea id="evidence-desc" rows="2" placeholder="Detail observed sub-base conditions, water accumulation, or aggregate exposure..." class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">Deep potholes formed near Km 32 following rain; bituminous binder washed away.</textarea>
+            </div>
+
+            <button type="submit" id="btn-submit-evidence" class="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 text-white font-medium text-xs rounded-lg shadow-sm transition-colors flex items-center justify-center space-x-1">
+              <span>Verify & Submit Ground Evidence</span>
+            </button>
+          </form>
+
+          <!-- Live Verification Output Box -->
+          <div id="verification-result-box" class="hidden p-3 rounded-lg border text-xs space-y-1"></div>
+        </div>
+
+        <!-- Evidence Feed List -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">Verified Field Ground-Truth Feed</h2>
+              <p class="text-xs text-slate-500">Inspections confirmed within approved roadway bounding corridors.</p>
+            </div>
+            <div class="flex items-center space-x-2 text-xs">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span class="font-medium text-slate-700"><span id="verified-count-label">2</span> Verified Items</span>
+            </div>
+          </div>
+
+          <div id="evidence-feed-list" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: AI-MODERATED CIVIC REVIEWS -->
+    <section id="view-reviews" class="space-y-6 hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Review Submission Card -->
+        <div class="lg:col-span-1 bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-bold text-slate-900">Public Review & Reasoning</h2>
+              <span class="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">AI Moderated</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Evaluates technical substance, checks against defamation/slander, and calculates weighted scores.</p>
+          </div>
+
+          <!-- Quick Test Presets -->
+          <div>
+            <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Load Test Presets:</label>
+            <div class="grid grid-cols-3 gap-1">
+              <button type="button" id="btn-preset-technical" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 py-1 px-1.5 rounded border border-slate-200 text-center font-medium">
+                ✅ Technical
+              </button>
+              <button type="button" id="btn-preset-defamation" class="text-[10px] bg-red-50 hover:bg-red-100 text-red-700 py-1 px-1.5 rounded border border-red-200 text-center font-medium">
+                ❌ Slander
+              </button>
+              <button type="button" id="btn-preset-vague" class="text-[10px] bg-amber-50 hover:bg-amber-100 text-amber-700 py-1 px-1.5 rounded border border-amber-200 text-center font-medium">
+                ⚠️ Vague
+              </button>
+            </div>
+          </div>
+
+          <form id="review-form" class="space-y-3">
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Select Tender</label>
+              <select id="review-tender-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50">
+                <option value="TND-2026-NHAI-091">NHAI NH-34 4-Laning (Observation Open)</option>
+                <option value="TND-2026-MORTH-811">MoRTH Teesta Bridge (Observation Window Active)</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-xs font-medium text-slate-700 block mb-1">Reviewer Tier</label>
+                <select id="review-tier-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50">
+                  <option value="CITIZEN">Citizen (1x)</option>
+                  <option value="CIVIL_ENGINEER" selected>Civil Engineer (5x)</option>
+                  <option value="ROAD_QUALITY_INSPECTOR">Road Inspector (8x)</option>
+                  <option value="STRUCTURAL_ENGINEER">Structural Eng (10x)</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-medium text-slate-700 block mb-1">Quality Rating</label>
+                <select id="review-rating-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50">
+                  <option value="1.0">1.0 - Severe Defects</option>
+                  <option value="2.0" selected>2.0 - Substandard</option>
+                  <option value="3.0">3.0 - Fair / Acceptable</option>
+                  <option value="4.0">4.0 - Good Work</option>
+                  <option value="5.0">5.0 - Superior Execution</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Substantive Reasoning Text</label>
+              <textarea id="review-reasoning-input" rows="4" placeholder="Detail specific road observations, bitumen grades, drainage slopes, or execution delays..." class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">Apex Builders quoted 24% below engineer estimate; sub-base compaction lacks proper roller passes, causing premature asphalt rutting along Km 31-33.</textarea>
+            </div>
+
+            <button type="submit" id="btn-submit-review" class="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 text-white font-medium text-xs rounded-lg shadow-sm transition-colors">
+              Submit Review to AI Moderation
+            </button>
+          </form>
+
+          <!-- AI Moderation Feedback Box -->
+          <div id="ai-moderation-result" class="hidden p-3 rounded-lg border text-xs space-y-2"></div>
+        </div>
+
+        <!-- Moderated Reviews Feed -->
+        <div class="lg:col-span-2 space-y-4">
+          <!-- Scorecard Header -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <span class="text-xs text-slate-400 font-medium">Tender NHAI-NH34 Composite Score</span>
+              <div class="flex items-baseline space-x-2">
+                <span id="composite-score-badge" class="text-2xl font-bold text-slate-900">1.92</span>
+                <span class="text-xs text-slate-500">/ 5.0 (Weighted Tier Average)</span>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3 text-xs">
+              <div class="bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                <span class="text-slate-500">Weight Volume:</span> <span id="weight-volume-label" class="font-bold text-slate-800">6.0x</span>
+              </div>
+              <div class="bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                <span class="text-slate-500">Confidence:</span> <span id="confidence-index-label" class="font-bold text-emerald-600">20.0%</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="reviews-feed-container" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: PREDICTION VS REALITY AUDIT ANALYTICS -->
+    <section id="view-analytics" class="space-y-6 hidden">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase">Monitored Tenders Value</span>
+          <p class="text-2xl font-bold text-slate-900 mt-1">₹1,265.0 <span class="text-sm font-normal text-slate-500">Crores</span></p>
+          <span class="text-xs text-slate-500 mt-1 block">Across NHAI, MoRTH & WB PWD</span>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase">Underbid Red Flags</span>
+          <p class="text-2xl font-bold text-red-600 mt-1">1 <span class="text-sm font-normal text-slate-500">Project (>20% below estimate)</span></p>
+          <span class="text-xs text-red-600 mt-1 block">Correlates with 69.4% delay probability</span>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-semibold text-slate-400 uppercase">Ground Distress Index</span>
+          <p class="text-2xl font-bold text-amber-600 mt-1">28.0 <span class="text-sm font-normal text-slate-500">/ 100</span></p>
+          <span class="text-xs text-amber-600 mt-1 block">Verified Potholes & Rutting on NH-34</span>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Chart 1: Bid Spread & Delay Probability -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-800">Quoted Bid Discount vs Delay Risk</h3>
+            <span class="text-xs text-slate-400">Procurement Matrix</span>
+          </div>
+          <div class="relative h-72">
+            <canvas id="chart-bid-risk"></canvas>
+          </div>
+          <p class="text-[11px] text-slate-500">
+            Data reveals that contractor Apex Builders underbid by -24.2%, carrying a predicted delay risk of 69.4% based on historical performance.
+          </p>
+        </div>
+
+        <!-- Chart 2: Multi-Tier Review Weighting -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-800">Review Influence by Governance Tier</h3>
+            <span class="text-xs text-slate-400">Effective Weight Distribution</span>
+          </div>
+          <div class="relative h-72">
+            <canvas id="chart-tier-weights"></canvas>
+          </div>
+          <p class="text-[11px] text-slate-500">
+            Professional civil engineers and structural inspectors carry 5x–10x weighting over unverified public reviews to prevent mob astroturfing.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Tender Details Modal Drawer -->
+  <div id="tender-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div>
+          <span id="modal-ref-badge" class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-orange-100 text-orange-800"></span>
+          <h3 id="modal-title" class="text-base font-bold text-slate-900 mt-1"></h3>
+        </div>
+        <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 overflow-y-auto space-y-6 text-sm" id="modal-content">
+        <!-- Tender Stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+          <div>
+            <span class="text-slate-400 block">Authority</span>
+            <span id="modal-authority" class="font-semibold text-slate-800"></span>
+          </div>
+          <div>
+            <span class="text-slate-400 block">Engineer Estimate</span>
+            <span id="modal-estimate" class="font-semibold text-slate-800"></span>
+          </div>
+          <div>
+            <span class="text-slate-400 block">Status</span>
+            <span id="modal-status" class="font-semibold text-slate-800"></span>
+          </div>
+          <div>
+            <span class="text-slate-400 block">Target Duration</span>
+            <span id="modal-duration" class="font-semibold text-slate-800"></span>
+          </div>
+        </div>
+
+        <!-- Bidders Table -->
+        <div>
+          <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">Competing Bidders & Quoted Amounts</h4>
+          <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="py-2 px-3">Bidder Company</th>
+                  <th class="py-2 px-3">Quoted Amount</th>
+                  <th class="py-2 px-3">Estimate Deviation</th>
+                  <th class="py-2 px-3">Tech Score</th>
+                  <th class="py-2 px-3">Position</th>
+                </tr>
+              </thead>
+              <tbody id="modal-bidders-tbody" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Automated Risk Indicators -->
+        <div id="modal-risk-box" class="p-4 rounded-xl border space-y-2 text-xs"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    <p>InfraAudit India • Open Public Procurement Oversight Framework for Indian Highways, Roads & Bridges</p>
+  </footer>
+
+  <!-- Modular Application Entrypoint -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
